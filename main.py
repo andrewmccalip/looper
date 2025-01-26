@@ -3,7 +3,7 @@ import subprocess
 import os
 
 # Default target duration of 1 hour in seconds
-TARGET_DURATION = 10 * 60 * 60
+TARGET_DURATION = 1 * 60 * 60
 INPUT_FILE = "song.mp3"  # Will also work with song.mkv
 OUTPUT_FILE = "looped_" + INPUT_FILE
 THUMBNAIL = "thumbnail.jpg"
