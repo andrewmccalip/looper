@@ -3,7 +3,7 @@ import subprocess
 import os
 
 # Default target duration of 1 hour in seconds
-TARGET_DURATION = 1 * 60 * 60
+TARGET_DURATION = 10 * 60 * 60
 INPUT_FILE = "song.mp3"  # Will also work with song.mkv
 OUTPUT_FILE = "looped_" + INPUT_FILE
 THUMBNAIL = "thumbnail.jpg"
@@ -29,17 +29,32 @@ def loop_song(input_file=INPUT_FILE, output_file=OUTPUT_FILE, target_duration=TA
         original_duration = len(audio)
         print(f"Original audio duration: {original_duration/1000:.2f} seconds")
         crossfade_ms = crossfade_duration * 1000
-        
-        # Calculate number of loops needed for target duration
         target_ms = target_duration * 1000
-        num_loops = max(1, int(target_ms / original_duration))
-        print(f"Creating {num_loops} loops with {crossfade_duration}s crossfade...")
 
-        # Create the looped audio
+        # Calculate number of loops needed
+        num_loops = max(1, int(target_ms / original_duration))
+        print(f"Need to create equivalent of {num_loops} loops...")
+
+        # Use recursive doubling for faster processing
         final_audio = audio
-        for i in range(num_loops - 1):
-            print(f"Processing loop {i+1}/{num_loops-1}...")
-            final_audio = final_audio.append(audio, crossfade=crossfade_ms)
+        current_loops = 1
+        
+        while len(final_audio) < target_ms:
+            print(f"Current audio length: {len(final_audio)/1000:.2f}s / {target_ms/1000:.2f}s")
+            
+            if current_loops >= 10:  # If we need many loops, start doubling
+                print("Doubling audio length...")
+                final_audio = final_audio.append(final_audio, crossfade=crossfade_ms)
+                current_loops *= 2
+            else:
+                print(f"Adding loop {current_loops}...")
+                final_audio = final_audio.append(audio, crossfade=crossfade_ms)
+                current_loops += 1
+
+        # Trim to exact length if we went over
+        if len(final_audio) > target_ms:
+            print(f"Trimming to exact length...")
+            final_audio = final_audio[:target_ms]
 
         # Export the final audio
         print(f"Exporting final audio to {output_file}...")
